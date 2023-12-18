@@ -1,65 +1,73 @@
-from flask import Flask, render_template, url_for, request, redirect
-from flask_sqlalchemy import SQLAlchemy
+import os
+from flask import Flask, render_template, request, redirect
 from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://fica:fica123@5432/ficina_baza'
-db = SQLAlchemy(app)
 
-class Todo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(200), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+db_url = "postgresql://fica:fica123@ahademy.hopto.org:5432/ficina_baza"
+engine = create_engine(db_url)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
+session = Session()
 
-    def __repr__(self):
-        return '<Task %r>' % self.id
+class Todo(Base):
+    __tablename__ = 'todo'
+    id = Column(Integer, primary_key=True)
+    description = Column(String)
+    date_created = Column(DateTime(timezone=True))
 
+Base.metadata.create_all(bind=engine)
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
     if request.method == 'POST':
         task_content = request.form['content']
-        new_task = Todo(content=task_content)
+        new_task = Todo(description=task_content, date_created=datetime.now())
 
         try:
-            db.session.add(new_task)
-            db.session.commit()
+            session.add(new_task)
+            session.commit()
             return redirect('/')
         except:
             return 'There was an issue adding your task'
-
     else:
-        tasks = Todo.query.order_by(Todo.date_created).all()
-        return render_template('index.html', tasks=tasks)
+        todos = session.query(Todo).all()
+        return render_template('index.html', tasks=todos)
 
-
-@app.route('/delete/<int:id>')
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete(id):
-    task_to_delete = Todo.query.get_or_404(id)
+    task_to_delete = session.query(Todo).get(id)
+
+    if not task_to_delete:
+        return 'Task not found', 404
 
     try:
-        db.session.delete(task_to_delete)
-        db.session.commit()
+        session.delete(task_to_delete)
+        session.commit()
         return redirect('/')
     except:
         return 'There was a problem deleting that task'
 
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update(id):
-    task = Todo.query.get_or_404(id)
+    task = session.query(Todo).get(id)
+
+    if not task:
+        return 'Task not found', 404
 
     if request.method == 'POST':
-        task.content = request.form['content']
+        task.description = request.form['content']
 
         try:
-            db.session.commit()
+            session.commit()
             return redirect('/')
         except:
             return 'There was an issue updating your task'
-
     else:
         return render_template('update.html', task=task)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
