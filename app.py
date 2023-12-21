@@ -8,12 +8,11 @@ from sqlalchemy.ext.declarative import declarative_base
 
 load_dotenv()
 
-db_password = os.environ.get('DB_PASSWORD')
+db_connection_string = os.environ.get('DB_CONNECTION_STRING')
 
 app = Flask(__name__)
 
-db_url = f"postgresql://fica:{db_password}@ahademy.hopto.org:5432/ficina_baza"
-engine = create_engine(db_url)
+engine = create_engine(db_connection_string)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 session = Session()
