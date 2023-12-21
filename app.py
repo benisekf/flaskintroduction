@@ -1,13 +1,18 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+load_dotenv()
+
+db_password = os.environ.get('DB_PASSWORD')
+
 app = Flask(__name__)
 
-db_url = "postgresql://fica:fica123@ahademy.hopto.org:5432/ficina_baza"
+db_url = f"postgresql://fica:{db_password}@ahademy.hopto.org:5432/ficina_baza"
 engine = create_engine(db_url)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
@@ -17,6 +22,7 @@ class Todo(Base):
     __tablename__ = 'todo'
     id = Column(Integer, primary_key=True)
     description = Column(String)
+    assigned_to = Column(String)  
     date_created = Column(DateTime(timezone=True))
 
 Base.metadata.create_all(bind=engine)
@@ -25,7 +31,8 @@ Base.metadata.create_all(bind=engine)
 def index():
     if request.method == 'POST':
         task_content = request.form['content']
-        new_task = Todo(description=task_content, date_created=datetime.now())
+        assigned_to = request.form.get('assigned_to')  
+        new_task = Todo(description=task_content, assigned_to=assigned_to, date_created=datetime.now())
 
         try:
             session.add(new_task)
@@ -60,6 +67,7 @@ def update(id):
 
     if request.method == 'POST':
         task.description = request.form['content']
+        task.assigned_to = request.form.get('assigned_to')  
 
         try:
             session.commit()
