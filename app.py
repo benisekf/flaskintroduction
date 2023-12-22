@@ -1,14 +1,17 @@
 import os
-from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect
 from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-load_dotenv()
-
+# Get the database connection string directly from the environment
 db_connection_string = os.environ.get('DB_CONNECTION_STRING')
+
+if db_connection_string is None:
+    raise ValueError("DB_CONNECTION_STRING environment variable is not set. Please check your environment.")
+
+print(f'DB_CONNECTION_STRING from environment: {db_connection_string}')
 
 app = Flask(__name__)
 
@@ -21,9 +24,8 @@ class Todo(Base):
     __tablename__ = 'todo'
     id = Column(Integer, primary_key=True)
     description = Column(String)
-    assigned_to = Column(String)  
+    assigned_to = Column(String) 
     date_created = Column(DateTime(timezone=True))
-
 Base.metadata.create_all(bind=engine)
 
 @app.route('/', methods=['POST', 'GET'])

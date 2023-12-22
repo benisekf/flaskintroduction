@@ -10,7 +10,8 @@
 
     <div class="form">
         <form action="/update/{{task.id}}" method="POST">
-            <input type="text" name="content" id="content" value="{{task.content}}">
+            <input type="text" name="content" id="content" value="{{ task.description }}">
+            <input type="text" name="assigned_to" id="assigned_to" value="{{ task.assigned_to }}" placeholder="Assigned To"> <!-- New input field -->
             <input type="submit" value="Update">
         </form>
     </div>
