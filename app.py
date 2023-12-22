@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-# Get the database connection string directly from the environment
 db_connection_string = os.environ.get('DB_CONNECTION_STRING')
 
 if db_connection_string is None:
