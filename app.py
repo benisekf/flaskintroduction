@@ -47,7 +47,7 @@ def index():
 
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete(id):
-    task_to_delete = session.query(Todo).get(id)
+    task_to_delete = session.get(Todo, id)
 
     if not task_to_delete:
         return 'Task not found', 404
